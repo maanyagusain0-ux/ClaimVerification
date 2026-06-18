@@ -3,3 +3,8 @@ __pycache__/
 uploads/
 *.pyc
 reports/*.xlsx
+
+.env
+.venv
+env/
+.streamlit/secrets.toml
