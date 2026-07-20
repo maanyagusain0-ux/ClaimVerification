@@ -17,8 +17,8 @@ def extract_product_details(driver, product_url):
     except:
         print("Page Load Timeout")
 
-    # Reduced wait
-    time.sleep(0.1)
+    # Wait for page to load
+    time.sleep(3)
 
     try:
         driver.execute_script(
@@ -27,12 +27,20 @@ def extract_product_details(driver, product_url):
     except:
         pass
 
-    time.sleep(0.1)
+    time.sleep(3)
 
     try:
-        page_text = driver.execute_script(
-            "return document.body.innerText;"
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located(
+                (By.XPATH, "//*[contains(text(),'Size & Fit')]")
+            )
         )
+
+        page_text = driver.find_element(
+            By.TAG_NAME,
+            "body"
+        ).text
+
     except:
         page_text = ""
 
@@ -48,29 +56,37 @@ def extract_product_details(driver, product_url):
         title_text = ""
 
     # -------------------------
-    # Extract Fit & Fabric
+    # Extract Fit
     # -------------------------
 
     fit_text = ""
-    fabric_text = ""
 
     lower_text = page_text.lower()
 
-    fit_pos = lower_text.find("size & fit")
+    FIT_KEYWORDS = [
+        "regular fit",
+        "slim fit",
+        "relaxed fit",
+        "oversized",
+        "skinny fit",
+        "comfort fit",
+        "loose fit"
+    ]
 
-    if fit_pos != -1:
+    for keyword in FIT_KEYWORDS:
+        if keyword in lower_text:
+            fit_text = keyword.title()
+            break
 
-        fit_text = page_text[
-            fit_pos:
-            fit_pos + 500
-        ]
+    # -------------------------
+    # Extract Fabric
+    # -------------------------
 
-    fabric_pos = lower_text.find(
-        "material & care"
-    )
+    fabric_text = ""
+
+    fabric_pos = lower_text.find("material & care")
 
     if fabric_pos != -1:
-
         fabric_text = page_text[
             fabric_pos:
             fabric_pos + 700
@@ -83,17 +99,15 @@ def extract_product_details(driver, product_url):
         + "\n"
         + fabric_text
     )
-
+    print("=" * 50)
+    print("TITLE:", title_text)
+    print("FIT TEXT:", fit_text)
+    print("PAGE HAS 'regular fit':", "regular fit" in page_text.lower())
+    print("=" * 50)
     return {
-
         "title_text": title_text,
-
         "page_text": page_text,
-
         "product_details": extracted_text,
-
         "fit_text": fit_text,
-
         "fabric_text": fabric_text
-
     }

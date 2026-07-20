@@ -130,6 +130,9 @@ for index, row in df.iterrows():
 
             "Fit Status":
             title_fit_status,
+             
+            "PDP Fit Status": 
+            pdp_fit_status,
 
             "Website Details":
             product_details[
