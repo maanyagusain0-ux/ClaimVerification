@@ -51,7 +51,7 @@ def process_file(uploaded_file):
     # Chrome Options
     chrome_options = Options()
 
-    # chrome_options.add_argument("--headless=new")
+    chrome_options.add_argument("--headless=new")
 
     chrome_options.add_argument(
         "--disable-gpu"
@@ -81,9 +81,19 @@ def process_file(uploaded_file):
     )
 
     # Launch Browser
+    from selenium.webdriver.chrome.service import Service
+
+    chrome_options.add_argument("--headless=new")
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument("--disable-gpu")
+
+    service = Service("/usr/bin/chromedriver")
+
     driver = webdriver.Chrome(
-        options=chrome_options
-    )
+    service=service,
+    options=chrome_options
+)
 
     report_rows = []
 

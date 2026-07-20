@@ -1,13 +1,29 @@
 FROM python:3.11-slim
 
-# Install Chrome dependencies
+# Install Chromium and ChromeDriver
 RUN apt-get update && apt-get install -y \
-    wget \
-    unzip \
-    curl \
-    gnupg \
     chromium \
     chromium-driver \
+    fonts-liberation \
+    libglib2.0-0 \
+    libnss3 \
+    libgconf-2-4 \
+    libfontconfig1 \
+    libx11-6 \
+    libx11-xcb1 \
+    libxcb1 \
+    libxcomposite1 \
+    libxcursor1 \
+    libxdamage1 \
+    libxi6 \
+    libxtst6 \
+    libatk1.0-0 \
+    libatk-bridge2.0-0 \
+    libcups2 \
+    libdrm2 \
+    libgbm1 \
+    libxrandr2 \
+    xdg-utils \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -23,4 +39,4 @@ ENV CHROMEDRIVER=/usr/bin/chromedriver
 
 EXPOSE 10000
 
-CMD streamlit run app.py --server.address=0.0.0.0 --server.port=$PORT
+CMD ["streamlit", "run", "app.py", "--server.address=0.0.0.0", "--server.port=10000"]
