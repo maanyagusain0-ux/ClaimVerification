@@ -6,7 +6,8 @@ from selenium.webdriver.chrome.options import Options
 
 from verification.product_extractor import extract_product_details
 from verification.catalogue_validator import (
-    validate_fit,
+    validate_title_fit,
+    validate_pdp_fit,
     validate_fabric
 )
 from reports.report_generator import save_report
@@ -16,7 +17,7 @@ start_time = time.time()
 
 print("Catalogue Improvement System Started")
 
-file_path = "data/Copy of Test- Maanya1.xlsm"
+file_path = "data/CV1.xlsx"
 
 df = pd.read_excel(file_path)
 df.columns = df.columns.str.strip()
@@ -100,9 +101,13 @@ for index, row in df.iterrows():
             product_details["fabric_text"]
         )
 
-        fit_status = validate_fit(
+        title_fit_status = validate_title_fit(
             row["Fit"],
-            product_details["title_text"],
+            product_details["title_text"]
+        )
+
+        pdp_fit_status = validate_pdp_fit(
+            row["Fit"],
             product_details["fit_text"]
         )
 
@@ -124,7 +129,7 @@ for index, row in df.iterrows():
             row["Fit"],
 
             "Fit Status":
-            fit_status,
+            title_fit_status,
 
             "Website Details":
             product_details[

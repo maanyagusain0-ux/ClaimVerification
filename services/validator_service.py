@@ -7,11 +7,13 @@ from selenium.webdriver.chrome.options import Options
 
 from verification.product_extractor import extract_product_details
 from verification.catalogue_validator import (
-    validate_fit,
+    validate_title_fit,
+    validate_pdp_fit,
     validate_fabric
 )
 
 from reports.report_generator import save_report
+
 
 def process_file(uploaded_file):
 
@@ -48,10 +50,21 @@ def process_file(uploaded_file):
 
     # Chrome Options
     chrome_options = Options()
-    #chrome_options.add_argument("--headless=new")
-    chrome_options.add_argument("--disable-gpu")
-    chrome_options.add_argument("--disable-dev-shm-usage")
-    chrome_options.add_argument("--no-sandbox")
+
+    # chrome_options.add_argument("--headless=new")
+
+    chrome_options.add_argument(
+        "--disable-gpu"
+    )
+
+    chrome_options.add_argument(
+        "--disable-dev-shm-usage"
+    )
+
+    chrome_options.add_argument(
+        "--no-sandbox"
+    )
+
     prefs = {
         "profile.managed_default_content_settings.images": 2
     }
@@ -62,10 +75,6 @@ def process_file(uploaded_file):
     )
 
     chrome_options.page_load_strategy = "eager"
-
-    chrome_options.add_argument(
-        "--disable-gpu"
-    )
 
     chrome_options.add_argument(
         "--window-size=1920,1080"
@@ -127,14 +136,21 @@ def process_file(uploaded_file):
                 f"{round(extraction_time, 2)} sec"
             )
 
+            # Fabric Validation
             fabric_status = validate_fabric(
                 row["Fabric composition"],
                 product_details["fabric_text"]
             )
 
-            fit_status = validate_fit(
+            # Title Fit Validation
+            title_fit_status = validate_title_fit(
                 row["Fit"],
-                product_details["title_text"],
+                product_details["title_text"]
+            )
+
+            # PDP Fit Validation
+            pdp_fit_status = validate_pdp_fit(
+                row["Fit"],
                 product_details["fit_text"]
             )
 
@@ -142,6 +158,9 @@ def process_file(uploaded_file):
 
                 "FG CODE":
                 row["FG CODE"],
+
+                "Product Link":
+                row["Link"],
 
                 "OLABI CODE":
                 row["OLABI CODE"],
@@ -155,19 +174,21 @@ def process_file(uploaded_file):
                 "Dataset Fit":
                 row["Fit"],
 
-                "Fit Status":
-                fit_status,
+                "Title Fit Status":
+                title_fit_status,
+
+                "PDP Fit Status":
+                pdp_fit_status,
 
                 "Website Details":
-                product_details[
-                    "product_details"
-                ].replace(
-                    "\n",
-                    " | "
-                ),
-
-                "Link":
-                row["Link"]
+                " | ".join(
+                  line.strip()
+                for line in product_details[
+                "product_details"
+                 ].splitlines()
+                 if line.strip()
+)
+        
 
             })
 

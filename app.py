@@ -8,7 +8,9 @@ st.set_page_config(
 )
 
 st.title("Catalogue Validation Tool")
-
+st.info(
+    "Large files may take several minutes to process."
+)
 uploaded_file = st.file_uploader(
     "Upload Catalogue Excel",
 
@@ -21,7 +23,11 @@ if uploaded_file:
         f"Uploaded File: {uploaded_file.name}"
     )
 
-    result = process_file(
+    with st.spinner(
+    "Validating catalogue... Please wait ⏳"
+):
+
+        result = process_file(
         uploaded_file
     )
 
@@ -30,7 +36,7 @@ if uploaded_file:
     report_path = (
         "reports/verification_report.xlsx"
     )
-
+    
     if os.path.exists(report_path):
 
         with open(

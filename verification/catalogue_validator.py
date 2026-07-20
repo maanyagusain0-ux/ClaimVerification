@@ -1,6 +1,5 @@
 import re
-
-
+from verification.fabric_dictionary import FABRIC_TYPES
 def normalize_text(text):
 
     text = str(text).lower()
@@ -14,10 +13,9 @@ def normalize_text(text):
     return text.strip()
 
 
-def validate_fit(
+def validate_title_fit(
     dataset_fit,
-    title_text,
-    website_text
+    title_text
 ):
 
     dataset_fit = normalize_text(
@@ -26,10 +24,6 @@ def validate_fit(
 
     title_text = normalize_text(
         title_text
-    )
-
-    website_text = normalize_text(
-        website_text
     )
 
     fit_keywords = [
@@ -63,28 +57,34 @@ def validate_fit(
             title_fit = keyword
             break
 
-    # Manager Requirement:
-    # If title contains fit info,
-    # compare only with title
-    print(f"Dataset Fit = [{dataset_fit}]")
-    print(f"Title Fit = [{title_fit}]")
-    print(f"Title Text = [{title_text}]")
-    print("=" * 50)
-    if title_fit:
+    if not title_fit:
 
-        if dataset_fit == title_fit:
-             return "FOUND"
+        return "NOT PRESENT"
 
-        if dataset_fit in title_fit:
-             return "FOUND"
+    if dataset_fit == title_fit:
+        return "FOUND"
 
-        if title_fit in dataset_fit:
-             return "FOUND"
+    if dataset_fit in title_fit:
+        return "FOUND"
 
-        return "NOT FOUND" 
+    if title_fit in dataset_fit:
+        return "FOUND"
 
-    # If title does not contain fit info,
-    # search elsewhere on PDP
+    return "NOT FOUND"
+
+
+def validate_pdp_fit(
+    dataset_fit,
+    fit_text
+):
+
+    dataset_fit = normalize_text(
+        dataset_fit
+    )
+
+    fit_text = normalize_text(
+        fit_text
+    )
 
     pattern = (
         r"\b"
@@ -94,7 +94,7 @@ def validate_fit(
 
     if re.search(
         pattern,
-        website_text
+        fit_text
     ):
         return "FOUND"
 
@@ -106,45 +106,49 @@ def validate_fabric(
     website_text
 ):
 
-    dataset_fabric = str(
-        dataset_fabric
-    ).lower()
+    dataset_fabric = normalize_text(dataset_fabric)
+    website_text = normalize_text(website_text)
 
-    website_text = str(
-        website_text
-    ).lower()
+    # -----------------------------
+    # CASE 1: Fabric Type Validation
+    # -----------------------------
+    for fabric in FABRIC_TYPES:
+        normalized_fabric = normalize_text(fabric)
+        if dataset_fabric == normalized_fabric:
 
-    dataset_fabric = (
-        dataset_fabric
-        .replace("&", ",")
-        .replace("/", ",")
+            if normalized_fabric in website_text:
+                return "MATCH"
+
+            return "MISMATCH"
+    # ------------------------------------
+    # CASE 2: Composition Validation
+    # ------------------------------------
+
+    dataset_lower = dataset_fabric
+    website_lower = website_text
+
+    dataset_lower = re.sub(r"\s+", " ", dataset_lower)
+    website_lower = re.sub(r"\s+", " ", website_lower)
+
+    dataset_pairs = re.findall(
+        r"(\d+)%\s*([a-z ]+?)(?=\d+%|$)",
+        dataset_lower
     )
 
-    parts = [
+    if len(dataset_pairs) == 0:
+        return "MISMATCH"
 
-        p.strip()
+    for percentage, material in dataset_pairs:
 
-        for p in
-        dataset_fabric.split(",")
+        material = material.strip()
 
-        if p.strip()
+        pattern = (
+            percentage
+            + r"%\s*"
+            + re.escape(material)
+        )
 
-    ]
+        if not re.search(pattern, website_lower):
+            return "MISMATCH"
 
-    matched_parts = 0
-
-    for part in parts:
-
-        if part in website_text:
-
-            matched_parts += 1
-
-    if matched_parts == len(parts):
-
-        return "EXACT MATCH"
-
-    elif matched_parts > 0:
-
-        return "PARTIAL MATCH"
-
-    return "MISMATCH"
+    return "MATCH"
