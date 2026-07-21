@@ -1,7 +1,9 @@
 import os
 import time
+from turtle import st
 import pandas as pd
-
+import streamlit as st
+import traceback
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
@@ -14,6 +16,15 @@ from verification.catalogue_validator import (
 
 from reports.report_generator import save_report
 
+def detect_column(df, keywords):
+    for col in df.columns:
+        col_name = str(col).strip().lower()
+
+        for keyword in keywords:
+            if keyword.lower() in col_name:
+                return col
+
+    return None
 
 def process_file(uploaded_file):
 
@@ -43,7 +54,18 @@ def process_file(uploaded_file):
     df = pd.read_excel(file_path)
 
     df.columns = df.columns.str.strip()
+    link_col = detect_column(df, ["link", "links", "url"])
+    fabric_col = detect_column(df, ["composition", "fabric composition", "material"])
+    fit_col = detect_column(df, ["fit"])
+    fg_col = detect_column(df, ["fg code"])
+    olabi_col = detect_column(df, ["olabi code", "olabi code buy master"])
 
+    print(df.columns.tolist())
+    print("Link:", link_col)
+    print("Fabric:", fabric_col)
+    print("Fit:", fit_col)
+    print("FG:", fg_col)
+    print("OLABI:", olabi_col)
     print(
         f"\nTotal rows loaded: {len(df)}"
     )
@@ -51,7 +73,7 @@ def process_file(uploaded_file):
     # Chrome Options
     chrome_options = Options()
 
-    chrome_options.add_argument("--headless=new")
+    #chrome_options.add_argument("--headless=new")
 
     chrome_options.add_argument(
         "--disable-gpu"
@@ -82,13 +104,11 @@ def process_file(uploaded_file):
 
     # Launch Browser
     from selenium.webdriver.chrome.service import Service
+    from webdriver_manager.chrome import ChromeDriverManager
 
-    chrome_options.add_argument("--headless=new")
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--disable-dev-shm-usage")
-    chrome_options.add_argument("--disable-gpu")
-
-    service = Service("/usr/bin/chromedriver")
+    service = Service(
+        ChromeDriverManager().install()
+)
 
     driver = webdriver.Chrome(
     service=service,
@@ -131,7 +151,7 @@ def process_file(uploaded_file):
 
             product_details = extract_product_details(
                 driver,
-                row["Link"]
+                row[link_col]
             )
 
             extraction_time = (
@@ -148,41 +168,41 @@ def process_file(uploaded_file):
 
             # Fabric Validation
             fabric_status = validate_fabric(
-                row["Fabric composition"],
+                row[fabric_col],
                 product_details["fabric_text"]
             )
 
             # Title Fit Validation
             title_fit_status = validate_title_fit(
-                row["Fit"],
+                row[fit_col],
                 product_details["title_text"]
             )
 
             # PDP Fit Validation
             pdp_fit_status = validate_pdp_fit(
-                row["Fit"],
+                row[fit_col],
                 product_details["fit_text"]
             )
 
             report_rows.append({
 
                 "FG CODE":
-                row["FG CODE"],
+                row[fg_col],
 
                 "Product Link":
-                row["Link"],
+                row[link_col],
 
                 "OLABI CODE":
-                row["OLABI CODE"],
+                row[olabi_col],
 
                 "Dataset Fabric":
-                row["Fabric composition"],
+                row[fabric_col],
 
                 "Fabric Status":
                 fabric_status,
 
                 "Dataset Fit":
-                row["Fit"],
+                row[fit_col],
 
                 "Title Fit Status":
                 title_fit_status,
@@ -202,14 +222,11 @@ def process_file(uploaded_file):
 
             })
 
+
         except Exception as e:
-
-            print(
-                f"Error processing row "
-                f"{index + 1}: {e}"
-            )
-
-            continue
+            traceback.print_exc()
+            st.error(f"Error on row {index + 1}: {e}")
+            raise
 
     # Cleanup
     driver.quit()

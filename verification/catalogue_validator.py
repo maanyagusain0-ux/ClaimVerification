@@ -73,29 +73,18 @@ def validate_title_fit(
     return "NOT FOUND"
 
 
-def validate_pdp_fit(
-    dataset_fit,
-    fit_text
-):
+def validate_pdp_fit(dataset_fit, fit_text):
 
-    dataset_fit = normalize_text(
-        dataset_fit
-    )
+    dataset_fit = normalize_text(dataset_fit)
+    fit_text = normalize_text(fit_text)
 
-    fit_text = normalize_text(
-        fit_text
-    )
+    if dataset_fit == "" or fit_text == "":
+        return "NOT PRESENT"
 
-    pattern = (
-        r"\b"
-        + re.escape(dataset_fit)
-        + r"\b"
-    )
+    if dataset_fit in fit_text:
+        return "FOUND"
 
-    if re.search(
-        pattern,
-        fit_text
-    ):
+    if fit_text in dataset_fit:
         return "FOUND"
 
     return "NOT FOUND"

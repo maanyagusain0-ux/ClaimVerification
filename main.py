@@ -4,6 +4,7 @@ import time
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
+from utils import detect_column
 from verification.product_extractor import extract_product_details
 from verification.catalogue_validator import (
     validate_title_fit,
@@ -17,11 +18,35 @@ start_time = time.time()
 
 print("Catalogue Improvement System Started")
 
-file_path = "data/CV1.xlsx"
+file_path = "data/new.xlsx"
 
 df = pd.read_excel(file_path)
 df.columns = df.columns.str.strip()
+link_col = detect_column(df, [
+    "link",
+    "links",
+    "url",
+    "product link"
+])
 
+fabric_col = detect_column(df, [
+    "composition",
+    "fabric composition",
+    "material"
+])
+
+fit_col = detect_column(df, [
+    "fit"
+])
+
+fg_col = detect_column(df, [
+    "fg code"
+])
+
+olabi_col = detect_column(df, [
+    "olabi code",
+    "olabi code buy master"
+])
 print("Total rows loaded:", len(df))
 
 
@@ -89,7 +114,7 @@ for index, row in df.iterrows():
 
     try:
 
-        product_url = row["Link"]
+        product_url =row[link_col]
 
         product_details = extract_product_details(
             driver,
@@ -97,36 +122,36 @@ for index, row in df.iterrows():
         )
 
         fabric_status = validate_fabric(
-            row["Fabric composition"],
+            row[fabric_col],
             product_details["fabric_text"]
         )
 
         title_fit_status = validate_title_fit(
-            row["Fit"],
+            row[fit_col],
             product_details["title_text"]
         )
 
         pdp_fit_status = validate_pdp_fit(
-            row["Fit"],
+            row[fit_col],
             product_details["fit_text"]
         )
 
         report_rows.append({
 
             "FG CODE":
-            row["FG CODE"],
+            row[fg_col],
 
             "OLABI CODE":
-            row["OLABI CODE"],
+            row[olabi_col],
 
             "Dataset Fabric":
-            row["Fabric composition"],
+            row[fabric_col],
 
             "Fabric Status":
             fabric_status,
 
             "Dataset Fit":
-            row["Fit"],
+            row[fit_col],
 
             "Fit Status":
             title_fit_status,

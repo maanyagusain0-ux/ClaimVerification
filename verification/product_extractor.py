@@ -7,48 +7,46 @@ import time
 def extract_product_details(driver, product_url):
 
     driver.get(product_url)
-
+    print("\n==============================")
+    print("REQUESTED URL:", product_url)
+    print("CURRENT URL :", driver.current_url)
+    print("==============================")
     try:
-        WebDriverWait(driver, 3).until(
-            EC.presence_of_element_located(
-                (By.TAG_NAME, "body")
-            )
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.TAG_NAME, "body"))
         )
     except:
         print("Page Load Timeout")
 
-    # Wait for page to load
+    # Allow dynamic content to load
     time.sleep(3)
 
+    # Scroll to trigger lazy loading
     try:
         driver.execute_script(
-            "window.scrollTo(0, document.body.scrollHeight * 0.7);"
+            "window.scrollTo(0, document.body.scrollHeight * 0.8);"
         )
+        time.sleep(2)
+
+        driver.execute_script(
+            "window.scrollTo(0, document.body.scrollHeight);"
+        )
+        time.sleep(2)
+
     except:
         pass
 
-    time.sleep(3)
-
+    # Read complete page text
     try:
-        WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located(
-                (By.XPATH, "//*[contains(text(),'Size & Fit')]")
-            )
-        )
-
-        page_text = driver.find_element(
-            By.TAG_NAME,
-            "body"
-        ).text
-
+        page_text = driver.find_element(By.TAG_NAME, "body").text
     except:
         page_text = ""
+
+    lower_text = page_text.lower()
 
     # -------------------------
     # Product Title
     # -------------------------
-
-    title_text = ""
 
     try:
         title_text = driver.title
@@ -61,8 +59,6 @@ def extract_product_details(driver, product_url):
 
     fit_text = ""
 
-    lower_text = page_text.lower()
-
     FIT_KEYWORDS = [
         "regular fit",
         "slim fit",
@@ -70,7 +66,11 @@ def extract_product_details(driver, product_url):
         "oversized",
         "skinny fit",
         "comfort fit",
-        "loose fit"
+        "loose fit",
+        "easy fit",
+        "mid rise",
+        "low rise",
+        "high rise"
     ]
 
     for keyword in FIT_KEYWORDS:
@@ -78,19 +78,40 @@ def extract_product_details(driver, product_url):
             fit_text = keyword.title()
             break
 
-    # -------------------------
-    # Extract Fabric
-    # -------------------------
+      
 
     fabric_text = ""
 
-    fabric_pos = lower_text.find("material & care")
+    fabric_headings = [
+        "material & care",
+        "material and care",
+        "fabric",
+        "composition"
+]
 
-    if fabric_pos != -1:
-        fabric_text = page_text[
+    for heading in fabric_headings:
+
+        fabric_pos = lower_text.find(heading)
+
+        if fabric_pos != -1:
+
+            fabric_text = page_text[
             fabric_pos:
-            fabric_pos + 700
+            fabric_pos + 800
         ]
+
+        break
+
+    # -------------------------
+    # Debug
+    # -------------------------
+
+    print("=" * 60)
+    print("TITLE:", title_text)
+    print("FIT TEXT:", fit_text)
+    print("PAGE HAS 'regular fit':", "regular fit" in lower_text)
+    print("FABRIC FOUND:", fabric_text[:250])
+    print("=" * 60)
 
     extracted_text = (
         title_text
@@ -99,11 +120,7 @@ def extract_product_details(driver, product_url):
         + "\n"
         + fabric_text
     )
-    print("=" * 50)
-    print("TITLE:", title_text)
-    print("FIT TEXT:", fit_text)
-    print("PAGE HAS 'regular fit':", "regular fit" in page_text.lower())
-    print("=" * 50)
+
     return {
         "title_text": title_text,
         "page_text": page_text,
