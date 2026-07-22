@@ -7,16 +7,19 @@ import time
 def extract_product_details(driver, product_url):
 
     driver.get(product_url)
-    print("\n==============================")
-    print("REQUESTED URL:", product_url)
-    print("CURRENT URL :", driver.current_url)
-    print("==============================")
+
+    time.sleep(5)
+
+    print("=" * 80)
+    print("URL:", driver.current_url)
+    print("TITLE:", driver.title)
+    print("=" * 80)
+
     try:
-        WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.TAG_NAME, "body"))
-        )
-    except:
-        print("Page Load Timeout")
+        body = driver.find_element(By.TAG_NAME, "body").text
+        print(body[:3000])
+    except Exception as e:
+        print("BODY ERROR:", e)
 
     # Allow dynamic content to load
     time.sleep(3)
@@ -104,7 +107,7 @@ def extract_product_details(driver, product_url):
             fabric_pos + 800
         ]
 
-        break
+            break
 
     # -------------------------
     # Debug
