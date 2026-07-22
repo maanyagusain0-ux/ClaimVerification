@@ -121,4 +121,4 @@ def validate_fabric(dataset_fabric, website_text):
         if material not in website:
             return "MISMATCH"
 
-    return "MATCH"s
+    return "MATCH"
