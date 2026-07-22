@@ -7,19 +7,20 @@ import time
 def extract_product_details(driver, product_url):
 
     driver.get(product_url)
-
+    
     time.sleep(5)
 
     print("=" * 80)
-    print("URL:", driver.current_url)
-    print("TITLE:", driver.title)
-    print("=" * 80)
+    print("CURRENT URL:", driver.current_url)
+    print("PAGE TITLE:", driver.title)
 
     try:
-        body = driver.find_element(By.TAG_NAME, "body").text
-        print(body[:3000])
+        print("PAGE SOURCE (first 2000 chars):")
+        print(driver.page_source[:2000])
     except Exception as e:
-        print("BODY ERROR:", e)
+        print("Cannot read page source:", e)
+
+    print("=" * 80)
 
     # Allow dynamic content to load
     time.sleep(3)
