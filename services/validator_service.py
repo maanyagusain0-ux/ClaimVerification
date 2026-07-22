@@ -69,50 +69,43 @@ def process_file(uploaded_file):
         f"\nTotal rows loaded: {len(df)}"
     )
 
-    # Chrome Options
+        # ---------------- Chrome Options ----------------
+
+    from selenium.webdriver.chrome.service import Service
+
     chrome_options = Options()
 
-    #chrome_options.add_argument("--headless=new")
+    # Chromium location inside Docker
+    chrome_options.binary_location = "/usr/bin/chromium-browser"
 
-    chrome_options.add_argument(
-        "--disable-gpu"
-    )
+    # Required for Render / Docker
+    chrome_options.add_argument("--headless=new")
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument("--disable-gpu")
+    chrome_options.add_argument("--disable-extensions")
+    chrome_options.add_argument("--disable-infobars")
+    chrome_options.add_argument("--disable-setuid-sandbox")
+    chrome_options.add_argument("--remote-debugging-port=9222")
+    chrome_options.add_argument("--window-size=1920,1080")
+    chrome_options.add_argument("--disable-software-rasterizer")
+    chrome_options.add_argument("--disable-features=VizDisplayCompositor")
+    # Faster loading
+    chrome_options.page_load_strategy = "eager"
 
-    chrome_options.add_argument(
-        "--disable-dev-shm-usage"
-    )
-
-    chrome_options.add_argument(
-        "--no-sandbox"
-    )
-
+    # Disable images
     prefs = {
         "profile.managed_default_content_settings.images": 2
     }
+    chrome_options.add_experimental_option("prefs", prefs)
 
-    chrome_options.add_experimental_option(
-        "prefs",
-        prefs
-    )
-
-    chrome_options.page_load_strategy = "eager"
-
-    chrome_options.add_argument(
-        "--window-size=1920,1080"
-    )
-
-    # Launch Browser
-    from selenium.webdriver.chrome.service import Service
-    from webdriver_manager.chrome import ChromeDriverManager
-
-    service = Service(
-        ChromeDriverManager().install()
-)
+    # Use the system ChromeDriver installed in Docker
+    service = Service("/usr/bin/chromedriver")
 
     driver = webdriver.Chrome(
-    service=service,
-    options=chrome_options
-)
+        service=service,
+        options=chrome_options
+    )
 
     report_rows = []
 
@@ -143,6 +136,7 @@ def process_file(uploaded_file):
                 driver.quit()
 
                 driver = webdriver.Chrome(
+                    service=service,
                     options=chrome_options
                 )
 
