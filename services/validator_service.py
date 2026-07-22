@@ -5,6 +5,7 @@ import streamlit as st
 import traceback
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
 
 from verification.product_extractor import extract_product_details
 from verification.catalogue_validator import (
@@ -69,9 +70,7 @@ def process_file(uploaded_file):
         f"\nTotal rows loaded: {len(df)}"
     )
 
-        # ---------------- Chrome Options ----------------
-
-    from selenium.webdriver.chrome.service import Service
+    # ---------------- Chrome Options ----------------
 
     chrome_options = Options()
 
@@ -142,10 +141,24 @@ def process_file(uploaded_file):
 
             extraction_start = time.time()
 
-            product_details = extract_product_details(
-                driver,
-                row[link_col]
-            )
+            try:
+                product_details = extract_product_details(
+                    driver,
+                    row[link_col]
+                )
+
+                print("=" * 80)
+                print("PRODUCT DETAILS RETURNED")
+                print(product_details)
+                print("=" * 80)
+            except Exception as e:
+                print("=" * 80)
+                print("EXTRACT PRODUCT DETAILS FAILED")
+                print("URL:", row[link_col])
+                print("ERROR:", repr(e))
+                traceback.print_exc()
+                print("=" * 80)
+                raise
 
             extraction_time = (
                 time.time()
@@ -205,16 +218,14 @@ def process_file(uploaded_file):
 
                 "Website Details":
                 " | ".join(
-                  line.strip()
-                for line in product_details[
-                "product_details"
-                 ].splitlines()
-                 if line.strip()
-)
-        
+                    line.strip()
+                    for line in product_details[
+                        "product_details"
+                    ].splitlines()
+                    if line.strip()
+                )
 
             })
-
 
         except Exception as e:
             traceback.print_exc()
