@@ -6,6 +6,7 @@ import traceback
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 
 from verification.product_extractor import extract_product_details
 from verification.catalogue_validator import (
@@ -70,25 +71,30 @@ def process_file(uploaded_file):
         f"\nTotal rows loaded: {len(df)}"
     )
 
-    # ---------------- Chrome Options ----------------
+    # ---------------- Chrome Options (Local Windows Debugging Setup) ----------------
 
     chrome_options = Options()
 
     # Chromium location inside Docker
-    chrome_options.binary_location = "/usr/bin/chromium"
+    # chrome_options.binary_location = "/usr/bin/chromium"
 
-    # Required for Render / Docker
-    chrome_options.add_argument("--headless=new")
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--disable-dev-shm-usage")
-    chrome_options.add_argument("--disable-gpu")
-    chrome_options.add_argument("--disable-extensions")
-    chrome_options.add_argument("--disable-infobars")
-    chrome_options.add_argument("--disable-setuid-sandbox")
-    chrome_options.add_argument("--remote-debugging-port=9222")
-    chrome_options.add_argument("--window-size=1920,1080")
-    chrome_options.add_argument("--disable-software-rasterizer")
-    chrome_options.add_argument("--disable-features=VizDisplayCompositor")
+    # Disabled for local UI debugging
+    # chrome_options.add_argument("--headless=new")
+
+    chrome_options.add_argument("--start-maximized")
+
+    # Render / Docker specific flags (Commented out for local testing)
+    # chrome_options.add_argument("--no-sandbox")
+    # chrome_options.add_argument("--disable-dev-shm-usage")
+    # chrome_options.add_argument("--disable-gpu")
+    # chrome_options.add_argument("--disable-extensions")
+    # chrome_options.add_argument("--disable-infobars")
+    # chrome_options.add_argument("--disable-setuid-sandbox")
+    # chrome_options.add_argument("--remote-debugging-port=9222")
+    # chrome_options.add_argument("--window-size=1920,1080")
+    # chrome_options.add_argument("--disable-software-rasterizer")
+    # chrome_options.add_argument("--disable-features=VizDisplayCompositor")
+
     # Faster loading
     chrome_options.page_load_strategy = "eager"
 
@@ -98,8 +104,8 @@ def process_file(uploaded_file):
     }
     chrome_options.add_experimental_option("prefs", prefs)
 
-    # Use the system ChromeDriver installed in Docker
-    service = Service("/usr/bin/chromedriver")
+    # Automatically manage and install ChromeDriver
+    service = Service(ChromeDriverManager().install())
 
     driver = webdriver.Chrome(
         service=service,
