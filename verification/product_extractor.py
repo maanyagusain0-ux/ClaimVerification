@@ -49,9 +49,12 @@ def extract_product_details(driver, product_url):
     # -------------------------
 
     try:
-        title_text = driver.title
+        title_text = driver.find_element(
+        By.TAG_NAME,
+        "h1"
+    ).text
     except:
-        title_text = ""
+        title_text = driver.title
 
     # -------------------------
     # Extract Fit
@@ -72,11 +75,12 @@ def extract_product_details(driver, product_url):
         "low rise",
         "high rise"
     ]
-
+    found_fits = []
     for keyword in FIT_KEYWORDS:
+
         if keyword in lower_text:
-            fit_text = keyword.title()
-            break
+            found_fits.append(keyword.title())
+    fit_text = " | ".join(found_fits)
 
       
 

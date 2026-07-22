@@ -75,69 +75,50 @@ def validate_title_fit(
 
 def validate_pdp_fit(dataset_fit, fit_text):
 
-    dataset_fit = normalize_text(dataset_fit)
-    fit_text = normalize_text(fit_text)
+    dataset = normalize_text(dataset_fit)
+    website = normalize_text(fit_text)
 
-    if dataset_fit == "" or fit_text == "":
+    if not website:
         return "NOT PRESENT"
 
-    if dataset_fit in fit_text:
-        return "FOUND"
-
-    if fit_text in dataset_fit:
+    if dataset in website:
         return "FOUND"
 
     return "NOT FOUND"
 
 
-def validate_fabric(
-    dataset_fabric,
-    website_text
-):
+def validate_fabric(dataset_fabric, website_text):
 
-    dataset_fabric = normalize_text(dataset_fabric)
-    website_text = normalize_text(website_text)
+    dataset = normalize_text(dataset_fabric)
+    website = normalize_text(website_text)
 
-    # -----------------------------
-    # CASE 1: Fabric Type Validation
-    # -----------------------------
-    for fabric in FABRIC_TYPES:
-        normalized_fabric = normalize_text(fabric)
-        if dataset_fabric == normalized_fabric:
+    # Replace common marketing names
+    dataset = dataset.replace("regenerative cotton", "cotton")
+    dataset = dataset.replace("better cotton initiative", "better cotton")
+    dataset = dataset.replace("bci cotton", "better cotton")
+    dataset = dataset.replace("organic cotton", "cotton")
 
-            if normalized_fabric in website_text:
-                return "MATCH"
+    website = website.replace("regenerative cotton", "cotton")
+    website = website.replace("better cotton initiative", "better cotton")
+    website = website.replace("bci cotton", "better cotton")
+    website = website.replace("organic cotton", "cotton")
 
-            return "MISMATCH"
-    # ------------------------------------
-    # CASE 2: Composition Validation
-    # ------------------------------------
-
-    dataset_lower = dataset_fabric
-    website_lower = website_text
-
-    dataset_lower = re.sub(r"\s+", " ", dataset_lower)
-    website_lower = re.sub(r"\s+", " ", website_lower)
-
-    dataset_pairs = re.findall(
+    pairs = re.findall(
         r"(\d+)%\s*([a-z ]+?)(?=\d+%|$)",
-        dataset_lower
+        dataset
     )
 
-    if len(dataset_pairs) == 0:
+    if not pairs:
         return "MISMATCH"
 
-    for percentage, material in dataset_pairs:
+    for percent, material in pairs:
 
         material = material.strip()
 
-        pattern = (
-            percentage
-            + r"%\s*"
-            + re.escape(material)
-        )
-
-        if not re.search(pattern, website_lower):
+        if percent not in website:
             return "MISMATCH"
 
-    return "MATCH"
+        if material not in website:
+            return "MISMATCH"
+
+    return "MATCH"s
