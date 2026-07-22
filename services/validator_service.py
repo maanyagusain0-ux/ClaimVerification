@@ -76,7 +76,7 @@ def process_file(uploaded_file):
     chrome_options = Options()
 
     # Chromium location inside Docker
-    chrome_options.binary_location = "/usr/bin/chromium-browser"
+    chrome_options.binary_location = "/usr/bin/chromium"
 
     # Required for Render / Docker
     chrome_options.add_argument("--headless=new")
