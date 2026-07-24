@@ -27,30 +27,8 @@ def detect_column(df, keywords):
 
     return None
 
-def process_file(uploaded_file):
-
+def process_file(file_path):
     start_time = time.time()
-
-    # Save uploaded file
-    os.makedirs(
-        "uploads",
-        exist_ok=True
-    )
-
-    file_path = os.path.join(
-        "uploads",
-        uploaded_file.name
-    )
-
-    with open(
-        file_path,
-        "wb"
-    ) as f:
-
-        f.write(
-            uploaded_file.getbuffer()
-        )
-
     # Read Excel
     df = pd.read_excel(file_path)
 
