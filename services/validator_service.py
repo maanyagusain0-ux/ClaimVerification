@@ -27,6 +27,13 @@ def detect_column(df, keywords):
     return None
 
 
+def apply_stealth(driver):
+    """Hide Selenium automation properties from detection scripts."""
+    driver.execute_script(
+        "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
+    )
+
+
 def process_file(file_path):
     start_time = time.time()
     # Read Excel
@@ -52,6 +59,20 @@ def process_file(file_path):
     # ---------------- Chrome Options ----------------
 
     chrome_options = Options()
+
+    # --- 1. User-Agent Config ---
+    chrome_options.add_argument(
+        "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"
+    )
+
+    # --- 2. Hide Selenium Automation ---
+    chrome_options.add_argument("--disable-blink-features=AutomationControlled")
+
+    # --- 3. Exclude Selenium Switches ---
+    chrome_options.add_experimental_option(
+        "excludeSwitches", ["enable-automation"]
+    )
+    chrome_options.add_experimental_option("useAutomationExtension", False)
 
     # Detect whether running locally or on Linux (Render/Streamlit)
     if os.name != "nt":
@@ -90,6 +111,7 @@ def process_file(file_path):
         service = Service("/usr/bin/chromedriver")
 
     driver = webdriver.Chrome(service=service, options=chrome_options)
+    apply_stealth(driver)
 
     report_rows = []
 
@@ -112,6 +134,7 @@ def process_file(file_path):
                 driver = webdriver.Chrome(
                     service=service, options=chrome_options
                 )
+                apply_stealth(driver)
 
             extraction_start = time.time()
 
