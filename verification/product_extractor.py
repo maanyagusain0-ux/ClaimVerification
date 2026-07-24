@@ -15,6 +15,14 @@ def extract_product_details(driver, product_url):
     for attempt in range(MAX_RETRIES):
         driver.get(product_url)
 
+        # Debug print immediately after driver.get()
+        print("=" * 80)
+        print("URL:", driver.current_url)
+        print("TITLE:", driver.title)
+        print("\nFIRST 3000 CHARACTERS OF PAGE SOURCE:\n")
+        print(driver.page_source[:3000])
+        print("=" * 80)
+
         WebDriverWait(driver, 20).until(
             EC.presence_of_element_located((By.TAG_NAME, "body"))
         )
@@ -28,9 +36,14 @@ def extract_product_details(driver, product_url):
         print(f"Retry {attempt + 1}/{MAX_RETRIES} due to Site Maintenance...")
         time.sleep(5)
     else:
-        raise Exception(
-            "Failed to load product page after max retries (Site Maintenance)"
-        )
+        # Temporarily returning debug fallback dictionary instead of raising Exception
+        return {
+            "title_text": driver.title,
+            "page_text": driver.page_source,
+            "product_details": driver.page_source,
+            "fit_text": "",
+            "fabric_text": "",
+        }
 
     # --- Fix 1: Detect Error / Maintenance Pages Immediately ---
     body_text = driver.find_element(By.TAG_NAME, "body").text.lower()
@@ -41,7 +54,7 @@ def extract_product_details(driver, product_url):
     if "oops! something went wrong" in body_text:
         raise Exception("Myntra returned an error page")
 
-    # --- Fix 3: Explicit Wait for Product Element instead of fixed sleep ---
+    # --- Explicit Wait for Product Element instead of fixed sleep ---
     try:
         WebDriverWait(driver, 20).until(
             EC.presence_of_element_located((By.TAG_NAME, "h1"))
