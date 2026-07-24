@@ -1,18 +1,53 @@
 import time
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 
 
 def extract_product_details(driver, product_url):
     """
     Navigates to product_url and extracts title, fit type, and fabric information.
+    Includes retries, early page error detection, and explicit waiting for elements.
     """
-    driver.get(product_url)
-    WebDriverWait(driver, 20).until(
-    EC.presence_of_element_located((By.TAG_NAME, "body"))
-)
-    time.sleep(3)
+    MAX_RETRIES = 3
+
+    # --- Fix 2: Retry Loading Page ---
+    for attempt in range(MAX_RETRIES):
+        driver.get(product_url)
+
+        WebDriverWait(driver, 20).until(
+            EC.presence_of_element_located((By.TAG_NAME, "body"))
+        )
+
+        title = driver.title.lower()
+
+        # If not hit by maintenance, break loop and proceed
+        if "site maintenance" not in title:
+            break
+
+        print(f"Retry {attempt + 1}/{MAX_RETRIES} due to Site Maintenance...")
+        time.sleep(5)
+    else:
+        raise Exception(
+            "Failed to load product page after max retries (Site Maintenance)"
+        )
+
+    # --- Fix 1: Detect Error / Maintenance Pages Immediately ---
+    body_text = driver.find_element(By.TAG_NAME, "body").text.lower()
+
+    if "site maintenance" in title:
+        raise Exception("Myntra Site Maintenance page received")
+
+    if "oops! something went wrong" in body_text:
+        raise Exception("Myntra returned an error page")
+
+    # --- Fix 3: Explicit Wait for Product Element instead of fixed sleep ---
+    try:
+        WebDriverWait(driver, 20).until(
+            EC.presence_of_element_located((By.TAG_NAME, "h1"))
+        )
+    except Exception:
+        print("Warning: h1 element not detected within timeout window")
 
     print("=" * 80)
     print("CURRENT URL:", driver.current_url)
@@ -26,19 +61,16 @@ def extract_product_details(driver, product_url):
 
     print("=" * 80)
 
-    # Allow dynamic content to load
-    time.sleep(3)
-
     # Scroll to trigger lazy loading
     try:
         driver.execute_script(
             "window.scrollTo(0, document.body.scrollHeight * 0.8);"
         )
-        time.sleep(2)
+        time.sleep(1.5)
         driver.execute_script(
             "window.scrollTo(0, document.body.scrollHeight);"
         )
-        time.sleep(2)
+        time.sleep(1.5)
     except Exception as e:
         print("Scrolling encountered an issue:", e)
 
