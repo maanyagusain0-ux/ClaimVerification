@@ -71,46 +71,45 @@ def process_file(uploaded_file):
         f"\nTotal rows loaded: {len(df)}"
     )
 
-    # ---------------- Chrome Options (Local Windows Debugging Setup) ----------------
+    # ---------------- Chrome Options ----------------
 
     chrome_options = Options()
 
-    # Chromium location inside Docker
-    # chrome_options.binary_location = "/usr/bin/chromium"
+# Detect whether running locally or on Linux (Render/Streamlit)
+    if os.name != "nt":
+        chrome_options.binary_location = "/usr/bin/chromium"
 
-    # Disabled for local UI debugging
-    # chrome_options.add_argument("--headless=new")
+        chrome_options.add_argument("--headless=new")
+        chrome_options.add_argument("--no-sandbox")
+        chrome_options.add_argument("--disable-dev-shm-usage")
+        chrome_options.add_argument("--disable-gpu")
+        chrome_options.add_argument("--disable-extensions")
+        chrome_options.add_argument("--disable-infobars")
+        chrome_options.add_argument("--disable-setuid-sandbox")
+        chrome_options.add_argument("--remote-debugging-port=9222")
+        chrome_options.add_argument("--window-size=1920,1080")
+        chrome_options.add_argument("--disable-software-rasterizer")
+    else:
+    # Windows local debugging
+        chrome_options.add_argument("--start-maximized")
 
-    chrome_options.add_argument("--start-maximized")
-
-    # Render / Docker specific flags (Commented out for local testing)
-    # chrome_options.add_argument("--no-sandbox")
-    # chrome_options.add_argument("--disable-dev-shm-usage")
-    # chrome_options.add_argument("--disable-gpu")
-    # chrome_options.add_argument("--disable-extensions")
-    # chrome_options.add_argument("--disable-infobars")
-    # chrome_options.add_argument("--disable-setuid-sandbox")
-    # chrome_options.add_argument("--remote-debugging-port=9222")
-    # chrome_options.add_argument("--window-size=1920,1080")
-    # chrome_options.add_argument("--disable-software-rasterizer")
-    # chrome_options.add_argument("--disable-features=VizDisplayCompositor")
-
-    # Faster loading
     chrome_options.page_load_strategy = "eager"
 
-    # Disable images
     prefs = {
         "profile.managed_default_content_settings.images": 2
-    }
+}
     chrome_options.add_experimental_option("prefs", prefs)
 
-    # Automatically manage and install ChromeDriver
-    service = Service(ChromeDriverManager().install())
+# Windows vs Linux
+    if os.name == "nt":
+        service = Service(ChromeDriverManager().install())
+    else:
+        service = Service("/usr/bin/chromedriver")
 
     driver = webdriver.Chrome(
-        service=service,
-        options=chrome_options
-    )
+    service=service,
+    options=chrome_options
+)
 
     report_rows = []
 
